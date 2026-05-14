@@ -9,7 +9,7 @@
   <Version>1.0.0.0</Version>
   <ProviderName>Gemini Data Assistant</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="Gemini Data Assistant"/>
+  <DisplayName DefaultValue="Divy.AI"/>
   <Description DefaultValue="AI-powered data cleaning and analysis using Google Gemini"/>
   <SupportUrl DefaultValue="https://example.com"/>
   <AppDomains>

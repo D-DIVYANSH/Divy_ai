@@ -7,10 +7,10 @@
 
   <Id>12345678-1234-1234-1234-123456789012</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>Gemini Data Assistant</ProviderName>
+  <ProviderName>Divy.AI</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Divy.AI"/>
-  <Description DefaultValue="AI-powered data cleaning and analysis using Google Gemini"/>
+  <Description DefaultValue="Divy.AI - Smart Excel Analytics Assistant"/>
   <SupportUrl DefaultValue="https://example.com"/>
   <AppDomains>
     <AppDomain>https://generativelanguage.googleapis.com</AppDomain>

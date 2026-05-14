@@ -21,7 +21,7 @@
   </Hosts>
 
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://YOUR-HOSTING-URL/taskpane.html"/>
+    <SourceLocation DefaultValue="https://d-divyansh.github.io/Divy_ai/"/>
   </DefaultSettings>
 
   <Permissions>ReadWriteDocument</Permissions>

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gemini Data Assistant</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f8fa;
+      --surface: #ffffff;
+      --border: #e4e6ea;
+      --text: #1a1d23;
+      --muted: #6b7280;
+      --accent: #1a73e8;
+      --accent-light: #e8f0fe;
+      --green: #0f9d58;
+      --green-light: #e6f4ea;
+      --red: #d93025;
+      --red-light: #fce8e6;
+      --amber: #f29900;
+      --amber-light: #fef7e0;
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: linear-gradient(135deg, #1a73e8, #0f9d58);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 14px; font-weight: 600;
+    }
+    .header-title { font-size: 14px; font-weight: 600; }
+    .header-sub { font-size: 11px; color: var(--muted); }
+
+    .body { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+    /* API Key section */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-body { padding: 12px; }
+
+    .api-row { display: flex; gap: 6px; }
+    .api-row input {
+      flex: 1; padding: 8px 10px; border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: 12px; font-family: inherit;
+      background: var(--bg); color: var(--text);
+    }
+    .api-row input:focus { outline: none; border-color: var(--accent); }
+    .btn {
+      padding: 7px 12px; border-radius: var(--radius);
+      font-size: 12px; font-weight: 500; font-family: inherit;
+      cursor: pointer; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text);
+      transition: all .15s;
+    }
+    .btn:hover { background: var(--bg); }
+    .btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn.primary:hover { background: #1557b0; }
+    .btn.success { background: var(--green); color: white; border-color: var(--green); }
+    .btn.danger { background: var(--red); color: white; border-color: var(--red); }
+
+    /* Metrics */
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+    }
+    .metric-label { font-size: 10px; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .03em; }
+    .metric-val { font-size: 20px; font-weight: 600; }
+    .metric-val.green { color: var(--green); }
+    .metric-val.red { color: var(--red); }
+
+    /* Tools */
+    .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .tool-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 9px 10px;
+      cursor: pointer; text-align: left; font-family: inherit;
+      transition: all .15s;
+    }
+    .tool-btn:hover { background: var(--accent-light); border-color: var(--accent); }
+    .tool-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .tool-icon { font-size: 16px; margin-bottom: 3px; display: block; }
+    .tool-label { font-size: 12px; font-weight: 500; color: var(--text); }
+    .tool-desc { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+    /* AI Chat */
+    .chat-area {
+      min-height: 120px; max-height: 200px; overflow-y: auto;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      background: var(--bg); padding: 10px;
+      margin-bottom: 8px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .msg { padding: 8px 10px; border-radius: var(--radius); font-size: 12px; line-height: 1.6; max-width: 92%; }
+    .msg.user { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 3px; }
+    .msg.ai { background: var(--surface); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 3px; }
+    .msg.system { background: var(--green-light); border: 1px solid #c3e6cb; align-self: center; font-size: 11px; color: var(--green); text-align: center; }
+    .msg.error { background: var(--red-light); border: 1px solid #f5c6cb; color: var(--red); }
+    .msg.loading { color: var(--muted); font-style: italic; }
+
+    .chat-input-row { display: flex; gap: 6px; }
+    .chat-input-row textarea {
+      flex: 1; padding: 8px 10px; border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: 12px; font-family: inherit;
+      resize: none; height: 60px; background: var(--surface); color: var(--text);
+    }
+    .chat-input-row textarea:focus { outline: none; border-color: var(--accent); }
+    .send-btn {
+      width: 38px; background: var(--accent); border: none; border-radius: var(--radius);
+      color: white; font-size: 16px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; flex-shrink: 0;
+      transition: background .15s;
+    }
+    .send-btn:hover { background: #1557b0; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .chip {
+      font-size: 11px; padding: 3px 9px; border: 1px solid var(--border);
+      border-radius: 20px; cursor: pointer; background: var(--surface);
+      color: var(--muted); transition: all .12s; font-family: inherit;
+    }
+    .chip:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+
+    /* Status */
+    .status-bar {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--muted); padding: 6px 0;
+    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+    .dot.green { background: var(--green); }
+    .dot.amber { background: var(--amber); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: #1a1d23; color: white; padding: 8px 16px;
+      border-radius: 20px; font-size: 12px; z-index: 999;
+      opacity: 0; transition: opacity .2s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">G</div>
+  <div>
+    <div class="header-title">Gemini Data Assistant</div>
+    <div class="header-sub">AI-powered Excel helper</div>
+  </div>
+</div>
+
+<div class="body">
+
+  <!-- API Key -->
+  <div class="section">
+    <div class="section-header">🔑 Gemini API Key</div>
+    <div class="section-body">
+      <div class="api-row">
+        <input type="password" id="apiKey" placeholder="AIza... apni API key daalen" />
+        <button class="btn primary" onclick="saveKey()">Save</button>
+      </div>
+      <div class="status-bar">
+        <span class="dot" id="keyDot"></span>
+        <span id="keyStatus">API key nahi di gayi</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Selected Rows</div><div class="metric-val" id="m-rows">—</div></div>
+    <div class="metric"><div class="metric-label">Columns</div><div class="metric-val" id="m-cols">—</div></div>
+    <div class="metric"><div class="metric-label">Empty Cells</div><div class="metric-val red" id="m-empty">—</div></div>
+    <div class="metric"><div class="metric-label">Sheet Name</div><div class="metric-val green" id="m-sheet" style="font-size:13px">—</div></div>
+  </div>
+
+  <!-- Scan Button -->
+  <button class="btn primary" onclick="scanSheet()" style="width:100%;padding:10px">
+    📊 Sheet scan karein
+  </button>
+
+  <!-- Data Tools -->
+  <div class="section">
+    <div class="section-header">🛠️ Data Tools</div>
+    <div class="section-body">
+      <div class="tools-grid">
+        <button class="tool-btn" onclick="runTool('duplicates')">
+          <span class="tool-icon">🗂️</span>
+          <div class="tool-label">Duplicates hatao</div>
+          <div class="tool-desc">Repeat rows remove karein</div>
+        </button>
+        <button class="tool-btn" onclick="runTool('trim')">
+          <span class="tool-icon">✂️</span>
+          <div class="tool-label">Spaces trim karein</div>
+          <div class="tool-desc">Extra whitespace hatao</div>
+        </button>
+        <button class="tool-btn" onclick="runTool('uppercase')">
+          <span class="tool-icon">🔠</span>
+          <div class="tool-label">UPPERCASE karein</div>
+          <div class="tool-desc">Selected text UpperCase</div>
+        </button>
+        <button class="tool-btn" onclick="runTool('lowercase')">
+          <span class="tool-icon">🔡</span>
+          <div class="tool-label">lowercase karein</div>
+          <div class="tool-desc">Selected text lowercase</div>
+        </button>
+        <button class="tool-btn" onclick="runTool('highlight-empty')">
+          <span class="tool-icon">🟡</span>
+          <div class="tool-label">Empty highlight karein</div>
+          <div class="tool-desc">Khaali cells yellow karein</div>
+        </button>
+        <button class="tool-btn" onclick="runTool('clear-format')">
+          <span class="tool-icon">🧹</span>
+          <div class="tool-label">Format clear karein</div>
+          <div class="tool-desc">Colors/bold reset karein</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Chat -->
+  <div class="section">
+    <div class="section-header">🤖 Gemini AI se Poochein</div>
+    <div class="section-body">
+      <div class="chat-area" id="chatArea">
+        <div class="msg system">Namaste! Apni sheet scan karein, phir koi bhi sawaal poochein.</div>
+      </div>
+      <div class="chat-input-row">
+        <textarea id="chatInput" placeholder="e.g. Is data mein kya problem hai? Formula suggest karo..."></textarea>
+        <button class="send-btn" onclick="sendMessage()">➤</button>
+      </div>
+      <div class="chips">
+        <button class="chip" onclick="quickAsk('Is data ko clean karne ke steps batao')">Cleaning plan</button>
+        <button class="chip" onclick="quickAsk('Sabse important column kaun sa hai?')">Key columns</button>
+        <button class="chip" onclick="quickAsk('Koi useful formula suggest karo is data ke liye')">Formula suggest</button>
+        <button class="chip" onclick="quickAsk('Data mein koi pattern ya anomaly hai?')">Patterns</button>
+        <button class="chip" onclick="quickAsk('Yeh data ek pivot table ke liye suitable hai?')">Pivot table?</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let apiKey = '';
+let sheetData = null;
+let sheetContext = '';
+
+Office.onReady(function(info) {
+  if (info.host === Office.HostType.Excel) {
+    const saved = localStorage.getItem('gemini_api_key');
+    if (saved) {
+      apiKey = saved;
+      document.getElementById('apiKey').value = saved;
+      setKeyStatus(true);
+    }
+  }
+});
+
+function saveKey() {
+  const val = document.getElementById('apiKey').value.trim();
+  if (!val) { showToast('API key daalen!'); return; }
+  apiKey = val;
+  localStorage.setItem('gemini_api_key', val);
+  setKeyStatus(true);
+  showToast('API key save ho gayi ✓');
+}
+
+function setKeyStatus(ok) {
+  document.getElementById('keyDot').className = 'dot ' + (ok ? 'green' : 'amber');
+  document.getElementById('keyStatus').textContent = ok ? 'API key ready hai' : 'API key nahi di gayi';
+}
+
+async function scanSheet() {
+  try {
+    await Excel.run(async (ctx) => {
+      const sheet = ctx.workbook.worksheets.getActiveWorksheet();
+      const range = sheet.getUsedRange();
+      range.load(['values', 'rowCount', 'columnCount']);
+      sheet.load('name');
+      await ctx.sync();
+
+      sheetData = range.values;
+      const rows = range.rowCount;
+      const cols = range.columnCount;
+      const sheetName = sheet.name;
+
+      let emptyCount = 0;
+      sheetData.forEach(row => row.forEach(cell => { if (cell === '' || cell === null) emptyCount++; }));
+
+      document.getElementById('m-rows').textContent = rows;
+      document.getElementById('m-cols').textContent = cols;
+      document.getElementById('m-empty').textContent = emptyCount;
+      document.getElementById('m-sheet').textContent = sheetName;
+
+      const headers = sheetData[0] || [];
+      const sample = sheetData.slice(0, 4);
+      sheetContext = `Sheet: "${sheetName}", ${rows} rows, ${cols} columns. Headers: [${headers.join(', ')}]. Empty cells: ${emptyCount}. Sample rows: ${JSON.stringify(sample)}`;
+
+      showToast('Sheet scan ho gayi! ' + rows + ' rows mili');
+      addMsg('system', `✓ Sheet scan complete: ${rows} rows, ${cols} columns, ${emptyCount} empty cells`);
+    });
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  }
+}
+
+async function runTool(type) {
+  try {
+    await Excel.run(async (ctx) => {
+      const sheet = ctx.workbook.worksheets.getActiveWorksheet();
+
+      if (type === 'trim' || type === 'uppercase' || type === 'lowercase') {
+        const sel = ctx.workbook.getSelectedRange();
+        sel.load('values');
+        await ctx.sync();
+        const newVals = sel.values.map(row => row.map(cell => {
+          if (typeof cell !== 'string') return cell;
+          if (type === 'trim') return cell.trim();
+          if (type === 'uppercase') return cell.toUpperCase();
+          if (type === 'lowercase') return cell.toLowerCase();
+        }));
+        sel.values = newVals;
+        await ctx.sync();
+        showToast(type + ' done! ✓');
+      }
+
+      if (type === 'highlight-empty') {
+        const range = sheet.getUsedRange();
+        range.load('values');
+        await ctx.sync();
+        for (let r = 0; r < range.values.length; r++) {
+          for (let c = 0; c < range.values[r].length; c++) {
+            if (range.values[r][c] === '' || range.values[r][c] === null) {
+              const cell = sheet.getRangeByIndexes(r, c, 1, 1);
+              cell.format.fill.color = '#FFF2CC';
+            }
+          }
+        }
+        await ctx.sync();
+        showToast('Empty cells highlight ho gayi ✓');
+      }
+
+      if (type === 'clear-format') {
+        const sel = ctx.workbook.getSelectedRange();
+        sel.format.fill.clear();
+        sel.format.font.bold = false;
+        sel.format.font.italic = false;
+        await ctx.sync();
+        showToast('Format clear ho gaya ✓');
+      }
+
+      if (type === 'duplicates') {
+        const range = sheet.getUsedRange();
+        range.load(['values', 'rowCount', 'columnCount']);
+        await ctx.sync();
+        const vals = range.values;
+        const seen = new Set();
+        const toDelete = [];
+        for (let r = vals.length - 1; r >= 1; r--) {
+          const key = JSON.stringify(vals[r]);
+          if (seen.has(key)) { toDelete.push(r); } else { seen.add(key); }
+        }
+        for (const r of toDelete) {
+          sheet.getRangeByIndexes(r, 0, 1, range.columnCount).delete(Excel.DeleteShiftDirection.up);
+        }
+        await ctx.sync();
+        showToast(toDelete.length + ' duplicate rows hatayi gayi ✓');
+      }
+    });
+  } catch(e) {
+    showToast('Error: ' + e.message);
+  }
+}
+
+function quickAsk(q) {
+  document.getElementById('chatInput').value = q;
+  sendMessage();
+}
+
+async function sendMessage() {
+  if (!apiKey) { showToast('Pehle Gemini API key save karein!'); return; }
+  const input = document.getElementById('chatInput');
+  const q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+
+  addMsg('user', q);
+  const loadId = addMsg('loading', 'Soch raha hoon...');
+
+  const prompt = sheetContext
+    ? `You are an expert Excel data analyst. Answer in simple Hindi-English mix (Hinglish). Be helpful and concise.\n\nUser's Excel sheet data context:\n${sheetContext}\n\nUser's question: ${q}`
+    : `You are an expert Excel data analyst. Answer in simple Hindi-English mix (Hinglish). Be helpful and concise.\n\nNote: Sheet abhi scan nahi hui hai.\n\nUser's question: ${q}`;
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await res.json();
+    removeMsg(loadId);
+    if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      addMsg('ai', data.candidates[0].content.parts[0].text);
+    } else if (data.error) {
+      addMsg('error', 'Error: ' + (data.error.message || 'API error'));
+    } else {
+      addMsg('error', 'Koi jawab nahi mila. API key check karein.');
+    }
+  } catch(e) {
+    removeMsg(loadId);
+    addMsg('error', 'Network error: ' + e.message);
+  }
+}
+
+let msgId = 0;
+function addMsg(type, text) {
+  const id = 'msg-' + (++msgId);
+  const area = document.getElementById('chatArea');
+  const div = document.createElement('div');
+  div.className = 'msg ' + type;
+  div.id = id;
+  div.textContent = text;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+  return id;
+}
+
+function removeMsg(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.getElementById('chatInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+</script>
+</body>
+</html>
